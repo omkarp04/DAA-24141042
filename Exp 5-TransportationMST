@@ -1,0 +1,145 @@
+import java.util.*;
+
+class Edge implements Comparable<Edge> {
+    int src, dest, weight;
+
+    Edge(int src, int dest, int weight) {
+        this.src = src;
+        this.dest = dest;
+        this.weight = weight;
+    }
+
+    public int compareTo(Edge compareEdge) {
+        return this.weight - compareEdge.weight;
+    }
+}
+
+class Graph {
+    int vertices;
+    int[][] adjMatrix;
+    List<Edge> edges = new ArrayList<>();
+
+    Graph(int vertices) {
+        this.vertices = vertices;
+        adjMatrix = new int[vertices][vertices];
+    }
+
+    void addEdge(int src, int dest, int weight) {
+        adjMatrix[src][dest] = weight;
+        adjMatrix[dest][src] = weight;
+        edges.add(new Edge(src, dest, weight));
+    }
+
+    // ---- Prim’s Algorithm ----
+    int primMST() {
+        int parent[] = new int[vertices];
+        int key[] = new int[vertices];
+        boolean mstSet[] = new boolean[vertices];
+
+        Arrays.fill(key, Integer.MAX_VALUE);
+        key[0] = 0; 
+        parent[0] = -1; 
+
+        for (int count = 0; count < vertices - 1; count++) {
+            int u = minKey(key, mstSet);
+            mstSet[u] = true;
+
+            for (int v = 0; v < vertices; v++) {
+                if (adjMatrix[u][v] != 0 && !mstSet[v] && adjMatrix[u][v] < key[v]) {
+                    parent[v] = u;
+                    key[v] = adjMatrix[u][v];
+                }
+            }
+        }
+
+        int totalCost = 0;
+        System.out.println("\nPrim’s MST (Minimum Road Connections):");
+        for (int i = 1; i < vertices; i++) {
+            System.out.println(parent[i] + " - " + i + " : " + adjMatrix[i][parent[i]]);
+            totalCost += adjMatrix[i][parent[i]];
+        }
+        System.out.println("Total Minimum Cost (Prim's): " + totalCost);
+        return totalCost;
+    }
+
+    int minKey(int key[], boolean mstSet[]) {
+        int min = Integer.MAX_VALUE, min_index = -1;
+        for (int v = 0; v < vertices; v++)
+            if (!mstSet[v] && key[v] < min) {
+                min = key[v];
+                min_index = v;
+            }
+        return min_index;
+    }
+
+    // ---- Kruskal’s Algorithm ----
+    int kruskalMST() {
+        int totalCost = 0;
+        Collections.sort(edges);
+        int[] parent = new int[vertices];
+
+        for (int i = 0; i < vertices; i++)
+            parent[i] = i;
+
+        System.out.println("\nKruskal’s MST (Minimum Road Connections):");
+        int edgeCount = 0;
+        for (Edge edge : edges) {
+            int x = find(parent, edge.src);
+            int y = find(parent, edge.dest);
+
+            if (x != y) {
+                System.out.println(edge.src + " - " + edge.dest + " : " + edge.weight);
+                totalCost += edge.weight;
+                union(parent, x, y);
+                edgeCount++;
+            }
+
+            if (edgeCount == vertices - 1)
+                break;
+        }
+        System.out.println("Total Minimum Cost (Kruskal's): " + totalCost);
+        return totalCost;
+    }
+
+    int find(int[] parent, int i) {
+        if (parent[i] != i)
+            parent[i] = find(parent, parent[i]);
+        return parent[i];
+    }
+
+    void union(int[] parent, int x, int y) {
+        int xroot = find(parent, x);
+        int yroot = find(parent, y);
+        parent[xroot] = yroot;
+    }
+}
+
+public class TransportationMST {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of cities: ");
+        int n = sc.nextInt();
+        Graph graph = new Graph(n);
+
+        System.out.print("Enter number of possible roads: ");
+        int e = sc.nextInt();
+
+        System.out.println("Enter each road: source destination cost");
+        for (int i = 0; i < e; i++) {
+            int src = sc.nextInt();
+            int dest = sc.nextInt();
+            int cost = sc.nextInt();
+            graph.addEdge(src, dest, cost);
+        }
+
+        int costPrim = graph.primMST();
+        int costKruskal = graph.kruskalMST();
+
+        System.out.println("\n---- Comparison ----");
+        if (costPrim == costKruskal)
+            System.out.println("Both algorithms give the same minimum cost: " + costPrim);
+        else
+            System.out.println("Prim’s Cost: " + costPrim + ", Kruskal’s Cost: " + costKruskal);
+    }
+}
