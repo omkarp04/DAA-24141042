@@ -1,0 +1,97 @@
+import java.util.*;
+
+class Graph {
+    private int vertices;
+    private int[][] adjMatrix;
+
+    public Graph(int vertices) {
+        this.vertices = vertices;
+        adjMatrix = new int[vertices][vertices];
+    }
+
+    public void addEdge(int src, int dest, int weight) {
+        adjMatrix[src][dest] = weight;
+        adjMatrix[dest][src] = weight; // for undirected graph (like roads)
+    }
+
+    public void dijkstra(int source) {
+        int[] dist = new int[vertices];
+        boolean[] visited = new boolean[vertices];
+        int[] parent = new int[vertices];
+
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        Arrays.fill(parent, -1);
+        dist[source] = 0;
+
+        for (int count = 0; count < vertices - 1; count++) {
+            int u = minDistance(dist, visited);
+            visited[u] = true;
+
+            for (int v = 0; v < vertices; v++) {
+                if (!visited[v] && adjMatrix[u][v] != 0 &&
+                    dist[u] + adjMatrix[u][v] < dist[v]) {
+                    dist[v] = dist[u] + adjMatrix[u][v];
+                    parent[v] = u;
+                }
+            }
+        }
+
+        printSolution(source, dist, parent);
+    }
+
+    private int minDistance(int[] dist, boolean[] visited) {
+        int min = Integer.MAX_VALUE, min_index = -1;
+
+        for (int v = 0; v < vertices; v++) {
+            if (!visited[v] && dist[v] <= min) {
+                min = dist[v];
+                min_index = v;
+            }
+        }
+        return min_index;
+    }
+
+    private void printPath(int[] parent, int j) {
+        if (j == -1) return;
+        printPath(parent, parent[j]);
+        System.out.print(j + " ");
+    }
+
+    private void printSolution(int source, int[] dist, int[] parent) {
+        System.out.println("\nShortest paths from city " + source + ":\n");
+        System.out.println("Destination\tDistance\tPath");
+        for (int i = 0; i < vertices; i++) {
+            if (i != source) {
+                System.out.print(source + " → " + i + "\t\t" + dist[i] + "\t\t");
+                printPath(parent, i);
+                System.out.println();
+            }
+        }
+    }
+}
+
+public class ShortestRouteFinder {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of cities: ");
+        int n = sc.nextInt();
+        Graph graph = new Graph(n);
+
+        System.out.print("Enter number of roads: ");
+        int e = sc.nextInt();
+
+        System.out.println("Enter each road: source destination distance");
+        for (int i = 0; i < e; i++) {
+            int src = sc.nextInt();
+            int dest = sc.nextInt();
+            int distance = sc.nextInt();
+            graph.addEdge(src, dest, distance);
+        }
+
+        System.out.print("Enter source city: ");
+        int source = sc.nextInt();
+
+        graph.dijkstra(source);
+    }
+}
